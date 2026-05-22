@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1e40af">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AI Audit">
+<title>AI Visibility Auditor</title>
+<link rel="manifest" href="/manifest.json">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ── Reset & base ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy:    #0f172a;
+  --blue:    #1e40af;
+  --accent:  #3b82f6;
+  --surface: #1e293b;
+  --card:    #243044;
+  --border:  #334155;
+  --text:    #f1f5f9;
+  --muted:   #94a3b8;
+  --green:   #10b981;
+  --red:     #ef4444;
+  --yellow:  #f59e0b;
+  --orange:  #f97316;
+  --radius:  14px;
+  --safe-b:  env(safe-area-inset-bottom, 0px);
+}
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--navy);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── Views ───────────────────────────────────────────────── */
+.view { display: none; min-height: 100dvh; flex-direction: column; }
+.view.active { display: flex; }
+
+/* ── Header ──────────────────────────────────────────────── */
+.header {
+  background: linear-gradient(135deg, var(--navy) 0%, #1e3a8a 100%);
+  padding: 56px 20px 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.header-logo {
+  font-size: 2rem;
+  margin-bottom: 8px;
+  display: block;
+}
+.header h1 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+.header p {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.agency-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #60a5fa;
+  margin-bottom: 12px;
+  display: block;
+}
+
+/* ── Form ────────────────────────────────────────────────── */
+.form-body {
+  flex: 1;
+  padding: 24px 20px calc(24px + var(--safe-b));
+  overflow-y: auto;
+}
+.field { margin-bottom: 18px; }
+.field label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.field input, .field textarea {
+  width: 100%;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 1rem;
+  padding: 13px 15px;
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: inherit;
+  -webkit-appearance: none;
+}
+.field input:focus, .field textarea:focus {
+  border-color: var(--accent);
+}
+.field input::placeholder, .field textarea::placeholder { color: var(--muted); }
+.field textarea { resize: none; rows: 3; height: 80px; }
+.field-hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 5px;
+}
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.btn-run {
+  width: 100%;
+  background: linear-gradient(135deg, var(--blue), var(--accent));
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  padding: 17px;
+  cursor: pointer;
+  margin-top: 8px;
+  letter-spacing: 0.2px;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-run:active { transform: scale(0.98); opacity: 0.9; }
+
+/* ── Loading ─────────────────────────────────────────────── */
+#view-loading {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 24px;
+}
+.loading-icon { font-size: 3rem; animation: pulse 1.5s ease-in-out infinite; margin-bottom: 16px; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.95)} }
+.loading-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 8px; }
+.loading-sub { font-size: 0.9rem; color: var(--muted); margin-bottom: 36px; }
+.loading-platforms { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; }
+.plat-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.plat-row .spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.plat-row.done .spinner { border: none; font-size: 1.1rem; animation: none; }
+
+/* ── Results ─────────────────────────────────────────────── */
+#view-results { overflow-y: auto; }
+.results-header {
+  background: linear-gradient(135deg, var(--navy) 0%, #1e3a8a 100%);
+  padding: 52px 20px 28px;
+  text-align: center;
+}
+.results-client {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #60a5fa;
+  margin-bottom: 6px;
+}
+.results-header h2 { font-size: 1.5rem; font-weight: 900; }
+.big-score {
+  font-size: 4rem;
+  font-weight: 900;
+  line-height: 1;
+  margin: 16px 0 4px;
+}
+.score-label-badge {
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 4px 16px;
+  border-radius: 999px;
+}
+
+.results-body { padding: 20px; padding-bottom: calc(20px + var(--safe-b)); }
+
+/* Section title */
+.sec-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 24px 0 12px;
+}
+
+/* KPI row */
+.kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.kpi-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+}
+.kpi-num { font-size: 1.8rem; font-weight: 900; color: var(--accent); }
+.kpi-lbl { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+/* Platform cards */
+.plat-cards { display: flex; flex-direction: column; gap: 10px; }
+.plat-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.plat-pct { font-size: 1.9rem; font-weight: 900; min-width: 64px; }
+.plat-info { flex: 1; }
+.plat-name { font-size: 0.85rem; font-weight: 700; }
+.plat-sub  { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+.plat-bar  { height: 5px; border-radius: 99px; background: var(--border); margin-top: 8px; overflow: hidden; }
+.plat-bar-fill { height: 100%; border-radius: 99px; transition: width 0.6s ease; }
+
+/* Sentiment chips */
+.sentiment-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.s-chip {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+/* Chart card */
+.chart-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 16px;
+}
+.chart-wrap { position: relative; height: 180px; }
+
+/* Results matrix */
+.matrix-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.matrix-table { border-collapse: collapse; width: 100%; font-size: 0.8rem; min-width: 340px; }
+.matrix-table th {
+  background: var(--surface);
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.matrix-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.matrix-table tr:last-child td { border-bottom: none; }
+.prompt-td { color: var(--text); max-width: 180px; line-height: 1.35; }
+.cell-yes { color: #34d399; text-align: center; font-weight: 700; font-size: 1rem; }
+.cell-no  { color: #f87171; text-align: center; font-size: 1rem; }
+.cell-na  { color: var(--muted); text-align: center; }
+
+/* Recommendations */
+.rec-list { display: flex; flex-direction: column; gap: 12px; }
+.rec-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  padding: 14px 16px;
+}
+.rec-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; }
+.rec-body  { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+/* Responses accordion */
+.resp-list { display: flex; flex-direction: column; gap: 8px; }
+details.resp-item {
+  background: var(--card);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+details.resp-item summary {
+  padding: 12px 14px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  -webkit-tap-highlight-color: transparent;
+}
+details.resp-item summary::-webkit-details-marker { display: none; }
+details.resp-item[open] summary { border-bottom: 1px solid var(--border); }
+.resp-plat { font-size: 0.7rem; font-weight: 700; color: #60a5fa; }
+.resp-prompt { color: var(--text); line-height: 1.35; }
+.resp-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 999px;
+  color: #fff;
+  margin-top: 2px;
+  align-self: flex-start;
+}
+.resp-body {
+  padding: 14px;
+  font-size: 0.82rem;
+  color: #94a3b8;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* New audit button */
+.btn-new {
+  width: 100%;
+  background: var(--card);
+  color: var(--accent);
+  border: 1.5px solid var(--accent);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 15px;
+  cursor: pointer;
+  margin-top: 24px;
+  margin-bottom: 12px;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+.btn-new:active { background: var(--surface); }
+
+/* Error toast */
+.toast {
+  position: fixed;
+  bottom: calc(24px + var(--safe-b));
+  left: 20px; right: 20px;
+  background: var(--red);
+  color: #fff;
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  z-index: 100;
+  display: none;
+  animation: slideUp 0.2s ease;
+}
+@keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+</style>
+</head>
+<body>
+
+<!-- ══ VIEW: FORM ══ -->
+<div class="view active" id="view-form">
+  <div class="header">
+    <span class="agency-tag">Cerberus Digital Media</span>
+    <span class="header-logo">🔍</span>
+    <h1>AI Visibility Auditor</h1>
+    <p>See how a brand appears across AI search engines</p>
+  </div>
+
+  <div class="form-body">
+    <form id="audit-form" autocomplete="off">
+
+      <div class="field">
+        <label>Client / Brand Name *</label>
+        <input type="text" id="f-name" placeholder="e.g. Acme Digital Agency" required>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Industry *</label>
+          <input type="text" id="f-industry" placeholder="e.g. digital marketing agency" required>
+        </div>
+        <div class="field">
+          <label>Location *</label>
+          <input type="text" id="f-location" placeholder="e.g. Atlanta, GA" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Website</label>
+        <input type="text" id="f-website" placeholder="e.g. example.com">
+      </div>
+
+      <div class="field">
+        <label>Competitors</label>
+        <textarea id="f-competitors" placeholder="One per line, e.g.&#10;Agency One&#10;Agency Two&#10;Agency Three"></textarea>
+        <div class="field-hint">Each will be tracked in the results.</div>
+      </div>
+
+      <div class="field">
+        <label>Custom Prompts (optional)</label>
+        <textarea id="f-prompts" placeholder="One per line — extra questions to test&#10;e.g. Which agencies specialize in B2B SaaS?"></textarea>
+      </div>
+
+      <button type="submit" class="btn-run">
+        <span>⚡</span> Run Audit
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ══ VIEW: LOADING ══ -->
+<div class="view" id="view-loading">
+  <div class="loading-icon">🤖</div>
+  <div class="loading-title">Running Audit…</div>
+  <div class="loading-sub">Querying AI engines in parallel</div>
+  <div class="loading-platforms">
+    <div class="plat-row" id="load-gpt">
+      <div class="spinner"></div>
+      <span>ChatGPT (GPT-4o)</span>
+    </div>
+    <div class="plat-row" id="load-claude">
+      <div class="spinner"></div>
+      <span>Claude (Anthropic)</span>
+    </div>
+    <div class="plat-row" id="load-gemini">
+      <div class="spinner"></div>
+      <span>Gemini (Google)</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VIEW: RESULTS ══ -->
+<div class="view" id="view-results">
+  <div class="results-header">
+    <div class="results-client" id="r-client-name">Client Name</div>
+    <h2>AI Visibility Audit</h2>
+    <div class="big-score" id="r-score">—</div>
+    <div><span class="score-label-badge" id="r-label">—</span></div>
+    <div style="font-size:0.8rem;color:#94a3b8;margin-top:8px" id="r-date"></div>
+  </div>
+
+  <div class="results-body">
+    <div class="kpi-row">
+      <div class="kpi-card"><div class="kpi-num" id="r-platforms">—</div><div class="kpi-lbl">Platforms</div></div>
+      <div class="kpi-card"><div class="kpi-num" id="r-prompts">—</div><div class="kpi-lbl">Prompts Run</div></div>
+      <div class="kpi-card"><div class="kpi-num" id="r-queries">—</div><div class="kpi-lbl">Total Queries</div></div>
+      <div class="kpi-card"><div class="kpi-num" id="r-mentions">—</div><div class="kpi-lbl">Mentions</div></div>
+    </div>
+
+    <div class="sec-title">Platform Breakdown</div>
+    <div class="plat-cards" id="r-plat-cards"></div>
+
+    <div class="sec-title">Visibility by Platform</div>
+    <div class="chart-card">
+      <div class="chart-wrap"><canvas id="chart-bar"></canvas></div>
+    </div>
+
+    <div class="sec-title">Competitor Mentions</div>
+    <div class="chart-card">
+      <div class="chart-wrap"><canvas id="chart-comp"></canvas></div>
+    </div>
+
+    <div class="sec-title">Prompt Results</div>
+    <div class="matrix-wrap">
+      <table class="matrix-table">
+        <thead id="r-matrix-head"></thead>
+        <tbody id="r-matrix-body"></tbody>
+      </table>
+    </div>
+
+    <div class="sec-title">Recommendations</div>
+    <div class="rec-list" id="r-recs"></div>
+
+    <div class="sec-title">Raw AI Responses</div>
+    <div class="resp-list" id="r-responses"></div>
+
+    <button class="btn-new" onclick="resetToForm()">+ New Audit</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Utilities ─────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+let barChart = null, compChart = null;
+
+function showView(id) {
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  $(id).classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+function showToast(msg) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.style.display = "block";
+  setTimeout(() => { t.style.display = "none"; }, 4000);
+}
+
+function scoreLabel(s) {
+  if (s >= 80) return ["Strong",   "#10b981"];
+  if (s >= 60) return ["Good",     "#3b82f6"];
+  if (s >= 40) return ["Moderate", "#f59e0b"];
+  if (s >= 20) return ["Weak",     "#f97316"];
+  return              ["Critical", "#ef4444"];
+}
+
+// ── Form submit ───────────────────────────────────────────────────
+$("audit-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const name       = $("f-name").value.trim();
+  const industry   = $("f-industry").value.trim();
+  const location   = $("f-location").value.trim();
+  const website    = $("f-website").value.trim();
+  const competitors = $("f-competitors").value.split("\n").map(s=>s.trim()).filter(Boolean);
+  const custom     = $("f-prompts").value.split("\n").map(s=>s.trim()).filter(Boolean);
+
+  if (!name || !industry || !location) {
+    showToast("Please fill in Brand Name, Industry, and Location.");
+    return;
+  }
+
+  showView("view-loading");
+  // Animate spinners with staggered done states (cosmetic, real work is parallel)
+  const rows = ["load-gpt","load-claude","load-gemini"];
+  rows.forEach(id => {
+    const el = $(id);
+    el.classList.remove("done");
+    el.querySelector(".spinner").className = "spinner";
+  });
+
+  try {
+    const resp = await fetch("/api/audit", {
+      method:  "POST",
+      headers: {"Content-Type": "application/json"},
+      body:    JSON.stringify({
+        client_name: name, industry, location, website,
+        competitors, custom_prompts: custom
+      })
+    });
+
+    // Mark all platforms done once response arrives
+    rows.forEach(id => {
+      $(id).classList.add("done");
+      $(id).querySelector(".spinner").textContent = "✅";
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error || "Server error");
+    }
+
+    const data = await resp.json();
+    renderResults(name, website, data);
+    showView("view-results");
+
+  } catch (err) {
+    showView("view-form");
+    showToast("Error: " + err.message);
+  }
+});
+
+// ── Render results ────────────────────────────────────────────────
+function renderResults(clientName, website, data) {
+  const { results, scores, prompts } = data;
+  const today = new Date().toLocaleDateString("en-US", {year:"numeric",month:"long",day:"numeric"});
+
+  // Header
+  $("r-client-name").textContent = clientName + (website ? ` · ${website}` : "");
+  $("r-date").textContent = today;
+
+  const [lbl, lclr] = scoreLabel(scores.overall);
+  $("r-score").textContent = scores.overall + "%";
+  $("r-score").style.color = lclr;
+  $("r-label").textContent = lbl;
+  $("r-label").style.background = lclr + "33";
+  $("r-label").style.color = lclr;
+
+  // KPIs
+  const platNames = Object.keys(scores.platforms);
+  const mentions  = results.filter(r => r.mentioned).length;
+  $("r-platforms").textContent = platNames.length;
+  $("r-prompts").textContent   = prompts.length;
+  $("r-queries").textContent   = results.length;
+  $("r-mentions").textContent  = mentions;
+
+  // Platform cards
+  const platColors = ["#3b82f6","#8b5cf6","#10b981"];
+  const platCards  = $("r-plat-cards");
+  platCards.innerHTML = "";
+  platNames.forEach((pname, i) => {
+    const pct   = scores.platforms[pname];
+    const det   = scores.platform_details[pname];
+    const [pl, pc] = scoreLabel(pct);
+    const clr   = platColors[i] || "#3b82f6";
+    const pos   = det.positive || 0, neu = det.neutral || 0,
+          mix   = det.mixed || 0,    neg = det.negative || 0;
+    platCards.innerHTML += `
+      <div class="plat-card">
+        <div class="plat-pct" style="color:${pc}">${pct}%</div>
+        <div class="plat-info">
+          <div class="plat-name">${pname}</div>
+          <div class="plat-sub">${det.mentioned}/${det.total} prompts · <span style="color:${pc};font-weight:700">${pl}</span></div>
+          <div class="plat-bar"><div class="plat-bar-fill" style="width:${pct}%;background:${clr}"></div></div>
+          <div class="sentiment-row">
+            <span class="s-chip">✅ ${pos}</span>
+            <span class="s-chip">🔵 ${neu}</span>
+            <span class="s-chip">🟡 ${mix}</span>
+            <span class="s-chip">🔴 ${neg}</span>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  // Bar chart
+  if (barChart) barChart.destroy();
+  barChart = new Chart($("chart-bar"), {
+    type: "bar",
+    data: {
+      labels: platNames,
+      datasets: [{
+        label: "Visibility %",
+        data: platNames.map(p => scores.platforms[p]),
+        backgroundColor: platColors.slice(0, platNames.length),
+        borderRadius: 8, borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        y: { min: 0, max: 100, grid: { color: "#1e293b" },
+             ticks: { color: "#94a3b8", callback: v => v+"%" } },
+        x: { grid: { display: false }, ticks: { color: "#94a3b8" } }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  // Competitor chart
+  const compData  = scores.competitor_counts || {};
+  const compNames = Object.keys(compData).length ? Object.keys(compData) : ["(none detected)"];
+  const compVals  = Object.keys(compData).length ? Object.values(compData) : [0];
+  if (compChart) compChart.destroy();
+  compChart = new Chart($("chart-comp"), {
+    type: "bar",
+    data: {
+      labels: compNames,
+      datasets: [{
+        label: "Mentions",
+        data: compVals,
+        backgroundColor: "#f97316",
+        borderRadius: 8, borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { grid: { color: "#1e293b" }, ticks: { color: "#94a3b8", stepSize: 1 } },
+        y: { grid: { display: false },   ticks: { color: "#94a3b8" } }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  // Matrix
+  const head = $("r-matrix-head");
+  const body = $("r-matrix-body");
+  head.innerHTML = `<tr><th>Prompt</th>${platNames.map(p=>`<th>${p.split(" ")[0]}</th>`).join("")}</tr>`;
+  body.innerHTML = "";
+  prompts.forEach(prompt => {
+    const cells = platNames.map(pname => {
+      const r = results.find(x => x.prompt === prompt && x.platform === pname);
+      if (!r) return `<td class="cell-na">—</td>`;
+      return r.mentioned
+        ? `<td class="cell-yes" title="${escHtml(r.snippet||"")}">✅</td>`
+        : `<td class="cell-no">✗</td>`;
+    }).join("");
+    body.innerHTML += `<tr><td class="prompt-td">${escHtml(prompt)}</td>${cells}</tr>`;
+  });
+
+  // Recommendations
+  $("r-recs").innerHTML = buildRecs(scores, clientName).map(([t,b]) =>
+    `<div class="rec-card"><div class="rec-title">${t}</div><div class="rec-body">${b}</div></div>`
+  ).join("");
+
+  // Responses
+  const sentColors = {positive:"#10b981",neutral:"#3b82f6",mixed:"#f59e0b",negative:"#ef4444",not_mentioned:"#64748b"};
+  $("r-responses").innerHTML = results.filter(r=>!r.error).map(r => `
+    <details class="resp-item">
+      <summary>
+        <span class="resp-plat">${escHtml(r.platform)}</span>
+        <span class="resp-prompt">${escHtml(r.prompt)}</span>
+        <span class="resp-badge" style="background:${sentColors[r.sentiment]||"#64748b"}">${r.mentioned ? r.sentiment : "not mentioned"}</span>
+      </summary>
+      <div class="resp-body">${escHtml(r.response)}</div>
+    </details>`
+  ).join("");
+}
+
+// ── Helpers ───────────────────────────────────────────────────────
+function escHtml(s) {
+  return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function resetToForm() {
+  showView("view-form");
+}
+
+function buildRecs(scores, clientName) {
+  const recs = [];
+  const o    = scores.overall;
+  const comps = scores.competitor_counts || {};
+
+  if      (o < 20) recs.push(["🚨 Critical visibility gap",
+    "This brand is virtually absent from AI-generated answers. Prioritize structured, citable content — FAQs, comparison pages, schema markup — that AI models can easily parse and reference."]);
+  else if (o < 40) recs.push(["⚠️ Significant optimization needed",
+    "Rarely surfaced. Build topical authority: publish in-depth guides, earn backlinks from credible sources AI models cite frequently, and optimize all business profiles (Google Business, Clutch, G2)."]);
+  else if (o < 60) recs.push(["📈 Inconsistent presence — room to grow",
+    "Appearing in some AI answers but not reliably. Audit which prompts trigger mentions and reverse-engineer content gaps. Target the exact query types where the brand goes unmentioned."]);
+  else if (o < 80) recs.push(["✅ Good — optimize for quality of mention",
+    "Presence is solid. Shift focus from visibility to sentiment: ensure AI models are citing the brand in a positive, authoritative context. Review the raw response snippets for any neutral framings to address."]);
+  else recs.push(["🌟 Strong AI visibility",
+    "Well-represented. Maintain through consistent publishing and monitoring for new AI engines. Protect brand perception across review platforms that AI models use as training signals."]);
+
+  const pscores = scores.platforms || {};
+  const pnames  = Object.keys(pscores);
+  if (pnames.length > 1) {
+    const lowest  = pnames.reduce((a,b) => pscores[a] < pscores[b] ? a : b);
+    const highest = pnames.reduce((a,b) => pscores[a] > pscores[b] ? a : b);
+    if (pscores[highest] - pscores[lowest] > 25)
+      recs.push([`📊 Platform gap: weak on ${lowest}`,
+        `${pscores[lowest]}% on ${lowest} vs ${pscores[highest]}% on ${highest}. Each AI engine has different training biases — research what sources ${lowest} tends to cite and ensure the brand is represented there.`]);
+  }
+
+  const topComp = Object.entries(comps).sort((a,b)=>b[1]-a[1])[0];
+  if (topComp) recs.push([`🔍 Competitor spotlight: ${topComp[0]}`,
+    `${topComp[0]} was mentioned ${topComp[1]} time${topComp[1]!==1?"s":""} across your tested prompts. Audit their content strategy and identify gaps your client can fill.`]);
+
+  recs.push(["📅 Run audits on a cadence",
+    "AI model training updates continuously. Schedule monthly re-audits to track visibility trends, especially after new content is published or major press coverage is earned."]);
+
+  return recs;
+}
+
+// ── PWA: Service Worker ───────────────────────────────────────────
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch(() => {});
+}
+</script>
+</body>
+</html>

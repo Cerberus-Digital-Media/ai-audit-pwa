@@ -1,0 +1,33 @@
+{
+  "name": "AI Visibility Auditor",
+  "short_name": "AI Audit",
+  "description": "Audit a brand's visibility across AI search engines — ChatGPT, Claude, and Gemini.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#1e40af",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "New Audit",
+      "short_name": "Audit",
+      "url": "/",
+      "description": "Start a new AI visibility audit"
+    }
+  ]
+}
