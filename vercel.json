@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/audit.py": {
+      "runtime": "python3.12"
+    }
+  },
   "headers": [
     {
       "source": "/api/(.*)",
