@@ -1,30 +1,9 @@
 {
-  "functions": {
-    "api/audit.py": {
-      "runtime": "python3.12"
-    }
-  },
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin",  "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "POST, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
-      ]
-    },
-    {
-      "source": "/manifest.json",
-      "headers": [
-        { "key": "Content-Type", "value": "application/manifest+json" }
-      ]
-    },
-    {
-      "source": "/sw.js",
-      "headers": [
-        { "key": "Cache-Control",          "value": "no-cache" },
-        { "key": "Service-Worker-Allowed", "value": "/" }
-      ]
-    }
+  "builds": [
+    { "src": "api/audit.py", "use": "@vercel/python" }
+  ],
+  "routes": [
+    { "src": "/api/audit", "dest": "/api/audit.py" },
+    { "src": "/(.*)",      "dest": "/$1" }
   ]
 }
