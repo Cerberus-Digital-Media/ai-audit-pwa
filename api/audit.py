@@ -124,7 +124,7 @@ def query_gemini(prompt, data):
     try:
         import google.generativeai as genai
         genai.configure(api_key=key)
-        model  = genai.GenerativeModel("gemini-1.5-pro")
+        model  = genai.GenerativeModel("gemini-2.0-flash")
         resp   = model.generate_content(prompt)
         text   = resp.text
         return {"platform": "Gemini (Google)", "prompt": prompt, "response": text,
