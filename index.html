@@ -11,377 +11,206 @@
 <link rel="manifest" href="/manifest.json">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-/* ── Reset & base ─────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --navy:    #0f172a;
-  --blue:    #1e40af;
-  --accent:  #3b82f6;
-  --surface: #1e293b;
-  --card:    #243044;
-  --border:  #334155;
-  --text:    #f1f5f9;
-  --muted:   #94a3b8;
-  --green:   #10b981;
-  --red:     #ef4444;
-  --yellow:  #f59e0b;
-  --orange:  #f97316;
-  --radius:  14px;
-  --safe-b:  env(safe-area-inset-bottom, 0px);
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0f172a;--blue:#1e40af;--accent:#3b82f6;--surface:#1e293b;
+  --card:#243044;--border:#334155;--text:#f1f5f9;--muted:#94a3b8;
+  --green:#10b981;--red:#ef4444;--yellow:#f59e0b;--orange:#f97316;
+  --purple:#8b5cf6;--radius:14px;--safe-b:env(safe-area-inset-bottom,0px);
 }
-html, body { height: 100%; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: var(--navy);
-  color: var(--text);
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:var(--navy);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.view{display:none;min-height:100dvh;flex-direction:column}
+.view.active{display:flex}
 
-/* ── Views ───────────────────────────────────────────────── */
-.view { display: none; min-height: 100dvh; flex-direction: column; }
-.view.active { display: flex; }
+/* Header */
+.header{background:linear-gradient(135deg,var(--navy) 0%,#1e3a8a 100%);
+  padding:56px 20px 24px;text-align:center;flex-shrink:0}
+.header-logo{font-size:2rem;margin-bottom:8px;display:block}
+.header h1{font-size:1.4rem;font-weight:800;letter-spacing:-.3px}
+.header p{font-size:.85rem;color:var(--muted);margin-top:4px}
+.agency-tag{font-size:.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:#60a5fa;margin-bottom:12px;display:block}
 
-/* ── Header ──────────────────────────────────────────────── */
-.header {
-  background: linear-gradient(135deg, var(--navy) 0%, #1e3a8a 100%);
-  padding: 56px 20px 24px;
-  text-align: center;
-  flex-shrink: 0;
-}
-.header-logo {
-  font-size: 2rem;
-  margin-bottom: 8px;
-  display: block;
-}
-.header h1 {
-  font-size: 1.4rem;
-  font-weight: 800;
-  letter-spacing: -0.3px;
-}
-.header p {
-  font-size: 0.85rem;
-  color: var(--muted);
-  margin-top: 4px;
-}
-.agency-tag {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: #60a5fa;
-  margin-bottom: 12px;
-  display: block;
-}
+/* Form */
+.form-body{flex:1;padding:24px 20px calc(24px + var(--safe-b));overflow-y:auto}
+.field{margin-bottom:18px}
+.field label{display:block;font-size:.75rem;font-weight:700;letter-spacing:.8px;
+  text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.field input,.field textarea{width:100%;background:var(--card);border:1.5px solid var(--border);
+  border-radius:10px;color:var(--text);font-size:1rem;padding:13px 15px;outline:none;
+  transition:border-color .15s;font-family:inherit;-webkit-appearance:none}
+.field input:focus,.field textarea:focus{border-color:var(--accent)}
+.field input::placeholder,.field textarea::placeholder{color:var(--muted)}
+.field textarea{resize:none;height:80px}
+.field-hint{font-size:.75rem;color:var(--muted);margin-top:5px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn-run{width:100%;background:linear-gradient(135deg,var(--blue),var(--accent));
+  color:#fff;border:none;border-radius:12px;font-size:1.05rem;font-weight:700;
+  padding:17px;cursor:pointer;margin-top:8px;letter-spacing:.2px;
+  -webkit-tap-highlight-color:transparent;transition:opacity .15s,transform .1s;
+  display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-run:active{transform:scale(.98);opacity:.9}
 
-/* ── Form ────────────────────────────────────────────────── */
-.form-body {
-  flex: 1;
-  padding: 24px 20px calc(24px + var(--safe-b));
-  overflow-y: auto;
-}
-.field { margin-bottom: 18px; }
-.field label {
-  display: block;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 6px;
-}
-.field input, .field textarea {
-  width: 100%;
-  background: var(--card);
-  border: 1.5px solid var(--border);
-  border-radius: 10px;
-  color: var(--text);
-  font-size: 1rem;
-  padding: 13px 15px;
-  outline: none;
-  transition: border-color 0.15s;
-  font-family: inherit;
-  -webkit-appearance: none;
-}
-.field input:focus, .field textarea:focus {
-  border-color: var(--accent);
-}
-.field input::placeholder, .field textarea::placeholder { color: var(--muted); }
-.field textarea { resize: none; rows: 3; height: 80px; }
-.field-hint {
-  font-size: 0.75rem;
-  color: var(--muted);
-  margin-top: 5px;
-}
-.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+/* History */
+.history-section{margin-top:28px}
+.history-title{font-size:.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.history-clear{font-size:.7rem;color:var(--red);cursor:pointer;background:none;border:none;
+  color:#f87171;padding:2px 6px}
+.history-empty{font-size:.85rem;color:var(--muted);text-align:center;
+  padding:20px;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.history-item{background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:background .15s}
+.history-item:active{background:var(--surface)}
+.history-score{font-size:1.4rem;font-weight:900;min-width:48px;text-align:center}
+.history-info{flex:1;min-width:0}
+.history-name{font-size:.9rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-meta{font-size:.75rem;color:var(--muted);margin-top:2px}
+.history-actions{display:flex;gap:6px}
+.btn-sm{font-size:.75rem;font-weight:700;padding:5px 10px;border-radius:6px;
+  border:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.btn-view{background:var(--accent);color:#fff}
+.btn-rerun{background:var(--surface);color:var(--muted);border:1px solid var(--border)}
 
-.btn-run {
-  width: 100%;
-  background: linear-gradient(135deg, var(--blue), var(--accent));
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  font-size: 1.05rem;
-  font-weight: 700;
-  padding: 17px;
-  cursor: pointer;
-  margin-top: 8px;
-  letter-spacing: 0.2px;
-  -webkit-tap-highlight-color: transparent;
-  transition: opacity 0.15s, transform 0.1s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-.btn-run:active { transform: scale(0.98); opacity: 0.9; }
+/* Loading */
+#view-loading{align-items:center;justify-content:center;text-align:center;padding:40px 24px}
+.loading-icon{font-size:3rem;animation:pulse 1.5s ease-in-out infinite;margin-bottom:16px}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.95)}}
+.loading-title{font-size:1.3rem;font-weight:800;margin-bottom:8px}
+.loading-sub{font-size:.9rem;color:var(--muted);margin-bottom:36px}
+.loading-platforms{display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px}
+.plat-row{display:flex;align-items:center;gap:12px;background:var(--card);
+  border-radius:10px;padding:12px 16px;font-size:.9rem;font-weight:600}
+.plat-row .spinner{width:18px;height:18px;border:2.5px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.plat-row.done .spinner{border:none;font-size:1.1rem;animation:none}
 
-/* ── Loading ─────────────────────────────────────────────── */
-#view-loading {
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 40px 24px;
-}
-.loading-icon { font-size: 3rem; animation: pulse 1.5s ease-in-out infinite; margin-bottom: 16px; }
-@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.95)} }
-.loading-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 8px; }
-.loading-sub { font-size: 0.9rem; color: var(--muted); margin-bottom: 36px; }
-.loading-platforms { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; }
-.plat-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--card);
-  border-radius: 10px;
-  padding: 12px 16px;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-.plat-row .spinner {
-  width: 18px;
-  height: 18px;
-  border: 2.5px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-  flex-shrink: 0;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-.plat-row.done .spinner { border: none; font-size: 1.1rem; animation: none; }
+/* Results header */
+#view-results{overflow-y:auto}
+.results-header{background:linear-gradient(135deg,var(--navy) 0%,#1e3a8a 100%);
+  padding:52px 20px 28px;text-align:center}
+.results-client{font-size:.7rem;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:#60a5fa;margin-bottom:6px}
+.results-header h2{font-size:1.5rem;font-weight:900}
+.big-score{font-size:4rem;font-weight:900;line-height:1;margin:16px 0 4px}
+.score-label-badge{display:inline-block;font-size:.85rem;font-weight:700;
+  padding:4px 16px;border-radius:999px}
 
-/* ── Results ─────────────────────────────────────────────── */
-#view-results { overflow-y: auto; }
-.results-header {
-  background: linear-gradient(135deg, var(--navy) 0%, #1e3a8a 100%);
-  padding: 52px 20px 28px;
-  text-align: center;
-}
-.results-client {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: #60a5fa;
-  margin-bottom: 6px;
-}
-.results-header h2 { font-size: 1.5rem; font-weight: 900; }
-.big-score {
-  font-size: 4rem;
-  font-weight: 900;
-  line-height: 1;
-  margin: 16px 0 4px;
-}
-.score-label-badge {
-  display: inline-block;
-  font-size: 0.85rem;
-  font-weight: 700;
-  padding: 4px 16px;
-  border-radius: 999px;
-}
+/* Results body */
+.results-body{padding:20px;padding-bottom:calc(20px + var(--safe-b))}
+.sec-title{font-size:.7rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--muted);margin:24px 0 12px}
 
-.results-body { padding: 20px; padding-bottom: calc(20px + var(--safe-b)); }
+/* Client info card */
+.client-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);
+  padding:16px 18px;margin-bottom:4px}
+.client-card-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.client-card-fields{flex:1}
+.client-field{margin-bottom:8px}
+.client-field-label{font-size:.65rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.8px;color:var(--muted)}
+.client-field-value{font-size:.9rem;font-weight:600;margin-top:1px}
+.client-field-value.muted{color:var(--muted);font-weight:400}
+.btn-edit{font-size:.75rem;font-weight:700;padding:6px 14px;border-radius:8px;
+  background:var(--surface);color:var(--accent);border:1px solid var(--accent);
+  cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
 
-/* Section title */
-.sec-title {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin: 24px 0 12px;
-}
-
-/* KPI row */
-.kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.kpi-card {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  border: 1px solid var(--border);
-}
-.kpi-num { font-size: 1.8rem; font-weight: 900; color: var(--accent); }
-.kpi-lbl { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi-card{background:var(--card);border-radius:var(--radius);padding:14px 16px;
+  border:1px solid var(--border)}
+.kpi-num{font-size:1.8rem;font-weight:900;color:var(--accent)}
+.kpi-lbl{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
 
 /* Platform cards */
-.plat-cards { display: flex; flex-direction: column; gap: 10px; }
-.plat-card {
-  background: var(--card);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  padding: 16px 18px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.plat-pct { font-size: 1.9rem; font-weight: 900; min-width: 64px; }
-.plat-info { flex: 1; }
-.plat-name { font-size: 0.85rem; font-weight: 700; }
-.plat-sub  { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
-.plat-bar  { height: 5px; border-radius: 99px; background: var(--border); margin-top: 8px; overflow: hidden; }
-.plat-bar-fill { height: 100%; border-radius: 99px; transition: width 0.6s ease; }
+.plat-cards{display:flex;flex-direction:column;gap:10px}
+.plat-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);
+  padding:16px 18px;display:flex;align-items:center;gap:14px}
+.plat-pct{font-size:1.9rem;font-weight:900;min-width:64px}
+.plat-info{flex:1}
+.plat-name{font-size:.85rem;font-weight:700}
+.plat-sub{font-size:.75rem;color:var(--muted);margin-top:2px}
+.plat-bar{height:5px;border-radius:99px;background:var(--border);margin-top:8px;overflow:hidden}
+.plat-bar-fill{height:100%;border-radius:99px;transition:width .6s ease}
+.sentiment-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.s-chip{font-size:.7rem;padding:2px 8px;border-radius:999px;
+  background:var(--surface);color:var(--muted);border:1px solid var(--border)}
 
-/* Sentiment chips */
-.sentiment-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
-.s-chip {
-  font-size: 0.7rem;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--muted);
-  border: 1px solid var(--border);
-}
+/* Charts */
+.chart-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:16px}
+.chart-wrap{position:relative;height:180px}
 
-/* Chart card */
-.chart-card {
-  background: var(--card);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  padding: 16px;
-}
-.chart-wrap { position: relative; height: 180px; }
+/* Who's ranking instead */
+.ranking-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);
+  padding:16px 18px}
+.ranking-note{font-size:.8rem;color:var(--muted);margin-bottom:12px;line-height:1.5}
+.ranking-empty{font-size:.85rem;color:var(--green);font-weight:600}
+.entity-list{display:flex;flex-wrap:wrap;gap:8px}
+.entity-chip{display:flex;align-items:center;gap:6px;background:var(--surface);
+  border:1px solid var(--border);border-radius:8px;padding:6px 12px}
+.entity-name{font-size:.85rem;font-weight:700}
+.entity-count{font-size:.72rem;color:var(--muted);background:var(--border);
+  padding:1px 6px;border-radius:999px}
 
-/* Results matrix */
-.matrix-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.matrix-table { border-collapse: collapse; width: 100%; font-size: 0.8rem; min-width: 340px; }
-.matrix-table th {
-  background: var(--surface);
-  padding: 8px 10px;
-  text-align: left;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-}
-.matrix-table td {
-  padding: 9px 10px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: middle;
-}
-.matrix-table tr:last-child td { border-bottom: none; }
-.prompt-td { color: var(--text); max-width: 180px; line-height: 1.35; }
-.cell-yes { color: #34d399; text-align: center; font-weight: 700; font-size: 1rem; }
-.cell-no  { color: #f87171; text-align: center; font-size: 1rem; }
-.cell-na  { color: var(--muted); text-align: center; }
+/* Matrix */
+.matrix-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.matrix-table{border-collapse:collapse;width:100%;font-size:.8rem;min-width:340px}
+.matrix-table th{background:var(--surface);padding:8px 10px;text-align:left;
+  font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.5px;border-bottom:1px solid var(--border);white-space:nowrap}
+.matrix-table td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.matrix-table tr:last-child td{border-bottom:none}
+.prompt-td{color:var(--text);max-width:180px;line-height:1.35}
+.cell-yes{color:#34d399;text-align:center;font-weight:700;font-size:1rem}
+.cell-no{color:#f87171;text-align:center;font-size:1rem}
+.cell-na{color:var(--muted);text-align:center}
 
 /* Recommendations */
-.rec-list { display: flex; flex-direction: column; gap: 12px; }
-.rec-card {
-  background: var(--card);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--accent);
-  padding: 14px 16px;
-}
-.rec-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; }
-.rec-body  { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+.rec-list{display:flex;flex-direction:column;gap:12px}
+.rec-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);
+  border-left:4px solid var(--accent);padding:14px 16px}
+.rec-title{font-size:.9rem;font-weight:700;margin-bottom:6px}
+.rec-body{font-size:.82rem;color:var(--muted);line-height:1.6}
 
-/* Responses accordion */
-.resp-list { display: flex; flex-direction: column; gap: 8px; }
-details.resp-item {
-  background: var(--card);
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  overflow: hidden;
-}
-details.resp-item summary {
-  padding: 12px 14px;
-  cursor: pointer;
-  font-size: 0.82rem;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  -webkit-tap-highlight-color: transparent;
-}
-details.resp-item summary::-webkit-details-marker { display: none; }
-details.resp-item[open] summary { border-bottom: 1px solid var(--border); }
-.resp-plat { font-size: 0.7rem; font-weight: 700; color: #60a5fa; }
-.resp-prompt { color: var(--text); line-height: 1.35; }
-.resp-badge {
-  display: inline-block;
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 1px 8px;
-  border-radius: 999px;
-  color: #fff;
-  margin-top: 2px;
-  align-self: flex-start;
-}
-.resp-body {
-  padding: 14px;
-  font-size: 0.82rem;
-  color: #94a3b8;
-  line-height: 1.7;
-  white-space: pre-wrap;
-  word-break: break-word;
-  max-height: 300px;
-  overflow-y: auto;
-}
+/* Raw responses */
+.resp-list{display:flex;flex-direction:column;gap:8px}
+details.resp-item{background:var(--card);border-radius:10px;border:1px solid var(--border);overflow:hidden}
+details.resp-item summary{padding:12px 14px;cursor:pointer;font-size:.82rem;
+  list-style:none;display:flex;flex-direction:column;gap:5px;-webkit-tap-highlight-color:transparent}
+details.resp-item summary::-webkit-details-marker{display:none}
+details.resp-item[open] summary{border-bottom:1px solid var(--border);background:var(--surface)}
+.resp-plat{font-size:.7rem;font-weight:700;color:#60a5fa}
+.resp-prompt{color:var(--text);line-height:1.35}
+.resp-meta{display:flex;align-items:center;gap:8px;margin-top:2px}
+.resp-badge{display:inline-block;font-size:.68rem;font-weight:700;
+  padding:2px 10px;border-radius:999px;color:#fff}
+.resp-snippet{font-size:.75rem;color:#94a3b8;font-style:italic;
+  border-left:2px solid var(--accent);padding-left:8px;margin-top:2px}
+.resp-body{padding:14px;font-size:.82rem;color:#94a3b8;line-height:1.7;
+  white-space:pre-wrap;word-break:break-word;max-height:300px;overflow-y:auto;background:#1a2438}
 
-/* New audit button */
-.btn-new {
-  width: 100%;
-  background: var(--card);
-  color: var(--accent);
-  border: 1.5px solid var(--accent);
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 700;
-  padding: 15px;
-  cursor: pointer;
-  margin-top: 24px;
-  margin-bottom: 12px;
-  -webkit-tap-highlight-color: transparent;
-  transition: background 0.15s;
-}
-.btn-new:active { background: var(--surface); }
+/* Buttons */
+.btn-new{width:100%;background:var(--card);color:var(--accent);
+  border:1.5px solid var(--accent);border-radius:12px;font-size:1rem;font-weight:700;
+  padding:15px;cursor:pointer;margin-top:24px;margin-bottom:12px;
+  -webkit-tap-highlight-color:transparent;transition:background .15s}
+.btn-new:active{background:var(--surface)}
 
-/* Error toast */
-.toast {
-  position: fixed;
-  bottom: calc(24px + var(--safe-b));
-  left: 20px; right: 20px;
-  background: var(--red);
-  color: #fff;
-  padding: 14px 18px;
-  border-radius: 12px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-  z-index: 100;
-  display: none;
-  animation: slideUp 0.2s ease;
-}
-@keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+/* Toast */
+.toast{position:fixed;bottom:calc(24px + var(--safe-b));left:20px;right:20px;
+  background:var(--red);color:#fff;padding:14px 18px;border-radius:12px;
+  font-size:.9rem;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,.4);
+  z-index:100;display:none;animation:slideUp .2s ease}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
 </style>
 </head>
 <body>
 
-<!-- ══ VIEW: FORM ══ -->
+<!-- FORM VIEW -->
 <div class="view active" id="view-form">
   <div class="header">
     <span class="agency-tag">Cerberus Digital Media</span>
@@ -389,15 +218,12 @@ details.resp-item[open] summary { border-bottom: 1px solid var(--border); }
     <h1>AI Visibility Auditor</h1>
     <p>See how a brand appears across AI search engines</p>
   </div>
-
   <div class="form-body">
     <form id="audit-form" autocomplete="off">
-
       <div class="field">
         <label>Client / Brand Name *</label>
         <input type="text" id="f-name" placeholder="e.g. Acme Digital Agency" required>
       </div>
-
       <div class="field-row">
         <div class="field">
           <label>Industry *</label>
@@ -408,63 +234,67 @@ details.resp-item[open] summary { border-bottom: 1px solid var(--border); }
           <input type="text" id="f-location" placeholder="e.g. Atlanta, GA" required>
         </div>
       </div>
-
       <div class="field">
         <label>Website</label>
         <input type="text" id="f-website" placeholder="e.g. example.com">
       </div>
-
       <div class="field">
         <label>Competitors</label>
-        <textarea id="f-competitors" placeholder="One per line, e.g.&#10;Agency One&#10;Agency Two&#10;Agency Three"></textarea>
-        <div class="field-hint">Each will be tracked in the results.</div>
+        <textarea id="f-competitors" placeholder="One per line&#10;e.g. Agency One&#10;Agency Two"></textarea>
+        <div class="field-hint">Each will be tracked in results.</div>
       </div>
-
       <div class="field">
         <label>Custom Prompts (optional)</label>
-        <textarea id="f-prompts" placeholder="One per line — extra questions to test&#10;e.g. Which agencies specialize in B2B SaaS?"></textarea>
+        <textarea id="f-prompts" placeholder="One per line — extra questions to test"></textarea>
       </div>
-
-      <button type="submit" class="btn-run">
-        <span>⚡</span> Run Audit
-      </button>
+      <button type="submit" class="btn-run"><span>⚡</span> Run Audit</button>
     </form>
+
+    <div class="history-section">
+      <div class="history-title">
+        <span>Recent Audits</span>
+        <button class="history-clear" onclick="clearHistory()">Clear all</button>
+      </div>
+      <div id="history-list"></div>
+    </div>
   </div>
 </div>
 
-<!-- ══ VIEW: LOADING ══ -->
+<!-- LOADING VIEW -->
 <div class="view" id="view-loading">
   <div class="loading-icon">🤖</div>
   <div class="loading-title">Running Audit…</div>
   <div class="loading-sub">Querying AI engines in parallel</div>
   <div class="loading-platforms">
-    <div class="plat-row" id="load-gpt">
-      <div class="spinner"></div>
-      <span>ChatGPT (GPT-4o)</span>
-    </div>
-    <div class="plat-row" id="load-claude">
-      <div class="spinner"></div>
-      <span>Claude (Anthropic)</span>
-    </div>
-    <div class="plat-row" id="load-gemini">
-      <div class="spinner"></div>
-      <span>Gemini (Google)</span>
-    </div>
+    <div class="plat-row" id="load-gpt"><div class="spinner"></div><span>ChatGPT (GPT-4o)</span></div>
+    <div class="plat-row" id="load-claude"><div class="spinner"></div><span>Claude (Anthropic)</span></div>
+    <div class="plat-row" id="load-gemini"><div class="spinner"></div><span>Gemini (Google)</span></div>
   </div>
 </div>
 
-<!-- ══ VIEW: RESULTS ══ -->
+<!-- RESULTS VIEW -->
 <div class="view" id="view-results">
   <div class="results-header">
-    <div class="results-client" id="r-client-name">Client Name</div>
+    <div class="results-client" id="r-client-name"></div>
     <h2>AI Visibility Audit</h2>
     <div class="big-score" id="r-score">—</div>
     <div><span class="score-label-badge" id="r-label">—</span></div>
-    <div style="font-size:0.8rem;color:#94a3b8;margin-top:8px" id="r-date"></div>
+    <div style="font-size:.8rem;color:#94a3b8;margin-top:8px" id="r-date"></div>
   </div>
 
   <div class="results-body">
-    <div class="kpi-row">
+
+    <!-- Client info card -->
+    <div class="sec-title">Client Info</div>
+    <div class="client-card">
+      <div class="client-card-row">
+        <div class="client-card-fields" id="r-client-fields"></div>
+        <button class="btn-edit" onclick="editCurrentAudit()">✏️ Edit</button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-row" style="margin-top:20px">
       <div class="kpi-card"><div class="kpi-num" id="r-platforms">—</div><div class="kpi-lbl">Platforms</div></div>
       <div class="kpi-card"><div class="kpi-num" id="r-prompts">—</div><div class="kpi-lbl">Prompts Run</div></div>
       <div class="kpi-card"><div class="kpi-num" id="r-queries">—</div><div class="kpi-lbl">Total Queries</div></div>
@@ -475,13 +305,15 @@ details.resp-item[open] summary { border-bottom: 1px solid var(--border); }
     <div class="plat-cards" id="r-plat-cards"></div>
 
     <div class="sec-title">Visibility by Platform</div>
-    <div class="chart-card">
-      <div class="chart-wrap"><canvas id="chart-bar"></canvas></div>
-    </div>
+    <div class="chart-card"><div class="chart-wrap"><canvas id="chart-bar"></canvas></div></div>
 
     <div class="sec-title">Competitor Mentions</div>
-    <div class="chart-card">
-      <div class="chart-wrap"><canvas id="chart-comp"></canvas></div>
+    <div class="chart-card"><div class="chart-wrap"><canvas id="chart-comp"></canvas></div></div>
+
+    <div class="sec-title">Who's Ranking Instead</div>
+    <div class="ranking-card">
+      <div class="ranking-note">Brands and entities that AI engines recommended when your client was not mentioned.</div>
+      <div id="r-ranking-instead"></div>
     </div>
 
     <div class="sec-title">Prompt Results</div>
@@ -502,277 +334,299 @@ details.resp-item[open] summary { border-bottom: 1px solid var(--border); }
   </div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
+const HISTORY_KEY = 'ai_audit_history';
+let barChart = null, compChart = null;
+let currentFormData = null;
+
 // ── Utilities ─────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
-let barChart = null, compChart = null;
-
-function showView(id) {
-  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-  $(id).classList.add("active");
-  window.scrollTo(0, 0);
+function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));$(id).classList.add('active');window.scrollTo(0,0)}
+function showToast(msg){const t=$('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',4000)}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function scoreLabel(s){
+  if(s>=80)return['Strong','#10b981'];
+  if(s>=60)return['Good','#3b82f6'];
+  if(s>=40)return['Moderate','#f59e0b'];
+  if(s>=20)return['Weak','#f97316'];
+  return['Critical','#ef4444'];
 }
 
-function showToast(msg) {
-  const t = $("toast");
-  t.textContent = msg;
-  t.style.display = "block";
-  setTimeout(() => { t.style.display = "none"; }, 4000);
+// ── History ───────────────────────────────────────────────────────
+function getHistory(){try{return JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]')}catch{return[]}}
+function saveHistory(h){localStorage.setItem(HISTORY_KEY,JSON.stringify(h))}
+
+function saveAudit(formData, data, scores){
+  const h = getHistory();
+  const entry = {
+    id: Date.now().toString(),
+    timestamp: new Date().toISOString(),
+    formData,
+    data,
+    scores
+  };
+  h.unshift(entry);
+  if(h.length>20) h.splice(20);
+  saveHistory(h);
+  renderHistory();
 }
 
-function scoreLabel(s) {
-  if (s >= 80) return ["Strong",   "#10b981"];
-  if (s >= 60) return ["Good",     "#3b82f6"];
-  if (s >= 40) return ["Moderate", "#f59e0b"];
-  if (s >= 20) return ["Weak",     "#f97316"];
-  return              ["Critical", "#ef4444"];
+function renderHistory(){
+  const h = getHistory();
+  const el = $('history-list');
+  if(!h.length){
+    el.innerHTML='<div class="history-empty">No audits yet — run your first one above.</div>';
+    return;
+  }
+  el.innerHTML = h.map(entry=>{
+    const [lbl,clr] = scoreLabel(entry.scores.overall);
+    const date = new Date(entry.timestamp).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    return `<div class="history-item">
+      <div class="history-score" style="color:${clr}">${entry.scores.overall}%</div>
+      <div class="history-info">
+        <div class="history-name">${esc(entry.formData.client_name)}</div>
+        <div class="history-meta">${esc(entry.formData.industry)} · ${esc(entry.formData.location)} · ${date}</div>
+      </div>
+      <div class="history-actions">
+        <button class="btn-sm btn-view" onclick="viewHistoryAudit('${entry.id}')">View</button>
+        <button class="btn-sm btn-rerun" onclick="rerunAudit('${entry.id}')">Re-run</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function clearHistory(){if(confirm('Clear all saved audits?')){localStorage.removeItem(HISTORY_KEY);renderHistory()}}
+
+function viewHistoryAudit(id){
+  const entry = getHistory().find(e=>e.id===id);
+  if(!entry){showToast('Audit not found.');return;}
+  currentFormData = entry.formData;
+  renderResults(entry.formData, entry.data);
+  showView('view-results');
+}
+
+function rerunAudit(id){
+  const entry = getHistory().find(e=>e.id===id);
+  if(!entry) return;
+  prefillForm(entry.formData);
+  showView('view-form');
+}
+
+function prefillForm(fd){
+  $('f-name').value       = fd.client_name||'';
+  $('f-industry').value   = fd.industry||'';
+  $('f-location').value   = fd.location||'';
+  $('f-website').value    = fd.website||'';
+  $('f-competitors').value= (fd.competitors||[]).join('\n');
+  $('f-prompts').value    = (fd.custom_prompts||[]).join('\n');
+}
+
+function editCurrentAudit(){
+  if(currentFormData) prefillForm(currentFormData);
+  showView('view-form');
 }
 
 // ── Form submit ───────────────────────────────────────────────────
-$("audit-form").addEventListener("submit", async e => {
+$('audit-form').addEventListener('submit', async e=>{
   e.preventDefault();
-  const name       = $("f-name").value.trim();
-  const industry   = $("f-industry").value.trim();
-  const location   = $("f-location").value.trim();
-  const website    = $("f-website").value.trim();
-  const competitors = $("f-competitors").value.split("\n").map(s=>s.trim()).filter(Boolean);
-  const custom     = $("f-prompts").value.split("\n").map(s=>s.trim()).filter(Boolean);
-
-  if (!name || !industry || !location) {
-    showToast("Please fill in Brand Name, Industry, and Location.");
-    return;
+  const formData = {
+    client_name:    $('f-name').value.trim(),
+    industry:       $('f-industry').value.trim(),
+    location:       $('f-location').value.trim(),
+    website:        $('f-website').value.trim(),
+    competitors:    $('f-competitors').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    custom_prompts: $('f-prompts').value.split('\n').map(s=>s.trim()).filter(Boolean),
+  };
+  if(!formData.client_name||!formData.industry||!formData.location){
+    showToast('Please fill in Brand Name, Industry, and Location.');return;
   }
-
-  showView("view-loading");
-  // Animate spinners with staggered done states (cosmetic, real work is parallel)
-  const rows = ["load-gpt","load-claude","load-gemini"];
-  rows.forEach(id => {
-    const el = $(id);
-    el.classList.remove("done");
-    el.querySelector(".spinner").className = "spinner";
+  currentFormData = formData;
+  showView('view-loading');
+  ['load-gpt','load-claude','load-gemini'].forEach(id=>{
+    const el=$(id);el.classList.remove('done');el.querySelector('.spinner').className='spinner';
   });
-
-  try {
-    const resp = await fetch("/api/audit", {
-      method:  "POST",
-      headers: {"Content-Type": "application/json"},
-      body:    JSON.stringify({
-        client_name: name, industry, location, website,
-        competitors, custom_prompts: custom
-      })
-    });
-
-    // Mark all platforms done once response arrives
-    rows.forEach(id => {
-      $(id).classList.add("done");
-      $(id).querySelector(".spinner").textContent = "✅";
-    });
-
-    if (!resp.ok) {
-      const err = await resp.json();
-      throw new Error(err.error || "Server error");
-    }
-
+  try{
+    const resp = await fetch('/api/audit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(formData)});
+    ['load-gpt','load-claude','load-gemini'].forEach(id=>{$(id).classList.add('done');$(id).querySelector('.spinner').textContent='✅';});
+    if(!resp.ok){const err=await resp.json();throw new Error(err.error||'Server error');}
     const data = await resp.json();
-    renderResults(name, website, data);
-    showView("view-results");
-
-  } catch (err) {
-    showView("view-form");
-    showToast("Error: " + err.message);
+    saveAudit(formData, data, data.scores);
+    renderResults(formData, data);
+    showView('view-results');
+  }catch(err){
+    showView('view-form');showToast('Error: '+err.message);
   }
 });
 
+// ── Entity extraction ─────────────────────────────────────────────
+function extractRankingInstead(results, clientName){
+  const counts={};
+  const skip=new Set(['the','and','or','for','with','from','this','that','these','those',
+    'their','they','you','here','there','some','many','most','also','when','where','what',
+    'who','how','why','however','additionally','furthermore','therefore','also','insurance',
+    'agency','company','llc','inc','corp','services','group','associates','solutions',
+    'your','our','their','which','about','after','before','other','each','both','few',
+    'more','such','into','than','then','only','very','just','been','have','were','will']);
+  for(const r of results){
+    if(r.mentioned||r.error||!r.response) continue;
+    const matches=r.response.match(/\b[A-Z][a-zA-Z]{2,}(?:\s+[A-Z][a-zA-Z]{2,}){0,2}\b/g)||[];
+    for(const m of matches){
+      const lower=m.toLowerCase();
+      if(skip.has(lower)||lower.includes(clientName.toLowerCase())||m.length<4) continue;
+      counts[m]=(counts[m]||0)+1;
+    }
+  }
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,12);
+}
+
 // ── Render results ────────────────────────────────────────────────
-function renderResults(clientName, website, data) {
-  const { results, scores, prompts } = data;
-  const today = new Date().toLocaleDateString("en-US", {year:"numeric",month:"long",day:"numeric"});
+function renderResults(formData, data){
+  const {results,scores,prompts}=data;
+  const today=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  const [lbl,lclr]=scoreLabel(scores.overall);
 
   // Header
-  $("r-client-name").textContent = clientName + (website ? ` · ${website}` : "");
-  $("r-date").textContent = today;
+  $('r-client-name').textContent=formData.client_name+(formData.website?' · '+formData.website:'');
+  $('r-date').textContent=today;
+  $('r-score').textContent=scores.overall+'%';
+  $('r-score').style.color=lclr;
+  $('r-label').textContent=lbl;
+  $('r-label').style.background=lclr+'33';
+  $('r-label').style.color=lclr;
 
-  const [lbl, lclr] = scoreLabel(scores.overall);
-  $("r-score").textContent = scores.overall + "%";
-  $("r-score").style.color = lclr;
-  $("r-label").textContent = lbl;
-  $("r-label").style.background = lclr + "33";
-  $("r-label").style.color = lclr;
+  // Client info card
+  const compsDisplay=(formData.competitors||[]).join(', ')||'None specified';
+  $('r-client-fields').innerHTML=`
+    <div class="client-field"><div class="client-field-label">Brand</div><div class="client-field-value">${esc(formData.client_name)}</div></div>
+    <div class="client-field"><div class="client-field-label">Industry</div><div class="client-field-value">${esc(formData.industry)}</div></div>
+    <div class="client-field"><div class="client-field-label">Location</div><div class="client-field-value">${esc(formData.location)}</div></div>
+    ${formData.website?`<div class="client-field"><div class="client-field-label">Website</div><div class="client-field-value">${esc(formData.website)}</div></div>`:''}
+    <div class="client-field"><div class="client-field-label">Competitors Tracked</div><div class="client-field-value ${compsDisplay==='None specified'?'muted':''}">${esc(compsDisplay)}</div></div>`;
 
   // KPIs
-  const platNames = Object.keys(scores.platforms);
-  const mentions  = results.filter(r => r.mentioned).length;
-  $("r-platforms").textContent = platNames.length;
-  $("r-prompts").textContent   = prompts.length;
-  $("r-queries").textContent   = results.length;
-  $("r-mentions").textContent  = mentions;
+  const platNames=Object.keys(scores.platforms);
+  const mentions=results.filter(r=>r.mentioned).length;
+  $('r-platforms').textContent=platNames.length;
+  $('r-prompts').textContent=prompts.length;
+  $('r-queries').textContent=results.length;
+  $('r-mentions').textContent=mentions;
 
   // Platform cards
-  const platColors = ["#3b82f6","#8b5cf6","#10b981"];
-  const platCards  = $("r-plat-cards");
-  platCards.innerHTML = "";
-  platNames.forEach((pname, i) => {
-    const pct   = scores.platforms[pname];
-    const det   = scores.platform_details[pname];
-    const [pl, pc] = scoreLabel(pct);
-    const clr   = platColors[i] || "#3b82f6";
-    const pos   = det.positive || 0, neu = det.neutral || 0,
-          mix   = det.mixed || 0,    neg = det.negative || 0;
-    platCards.innerHTML += `
-      <div class="plat-card">
-        <div class="plat-pct" style="color:${pc}">${pct}%</div>
-        <div class="plat-info">
-          <div class="plat-name">${pname}</div>
-          <div class="plat-sub">${det.mentioned}/${det.total} prompts · <span style="color:${pc};font-weight:700">${pl}</span></div>
-          <div class="plat-bar"><div class="plat-bar-fill" style="width:${pct}%;background:${clr}"></div></div>
-          <div class="sentiment-row">
-            <span class="s-chip">✅ ${pos}</span>
-            <span class="s-chip">🔵 ${neu}</span>
-            <span class="s-chip">🟡 ${mix}</span>
-            <span class="s-chip">🔴 ${neg}</span>
-          </div>
+  const platColors=['#3b82f6','#8b5cf6','#10b981'];
+  $('r-plat-cards').innerHTML=platNames.map((pname,i)=>{
+    const pct=scores.platforms[pname];
+    const det=scores.platform_details[pname];
+    const [pl,pc]=scoreLabel(pct);
+    const clr=platColors[i]||'#3b82f6';
+    return`<div class="plat-card">
+      <div class="plat-pct" style="color:${pc}">${pct}%</div>
+      <div class="plat-info">
+        <div class="plat-name">${esc(pname)}</div>
+        <div class="plat-sub">${det.mentioned}/${det.total} prompts · <span style="color:${pc};font-weight:700">${pl}</span></div>
+        <div class="plat-bar"><div class="plat-bar-fill" style="width:${pct}%;background:${clr}"></div></div>
+        <div class="sentiment-row">
+          <span class="s-chip">✅ ${det.positive||0}</span>
+          <span class="s-chip">🔵 ${det.neutral||0}</span>
+          <span class="s-chip">🟡 ${det.mixed||0}</span>
+          <span class="s-chip">🔴 ${det.negative||0}</span>
         </div>
-      </div>`;
-  });
+      </div>
+    </div>`;
+  }).join('');
 
   // Bar chart
-  if (barChart) barChart.destroy();
-  barChart = new Chart($("chart-bar"), {
-    type: "bar",
-    data: {
-      labels: platNames,
-      datasets: [{
-        label: "Visibility %",
-        data: platNames.map(p => scores.platforms[p]),
-        backgroundColor: platColors.slice(0, platNames.length),
-        borderRadius: 8, borderSkipped: false,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      scales: {
-        y: { min: 0, max: 100, grid: { color: "#1e293b" },
-             ticks: { color: "#94a3b8", callback: v => v+"%" } },
-        x: { grid: { display: false }, ticks: { color: "#94a3b8" } }
-      },
-      plugins: { legend: { display: false } }
-    }
+  if(barChart) barChart.destroy();
+  barChart=new Chart($('chart-bar'),{
+    type:'bar',
+    data:{labels:platNames,datasets:[{label:'Visibility %',data:platNames.map(p=>scores.platforms[p]),backgroundColor:platColors.slice(0,platNames.length),borderRadius:8,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:100,grid:{color:'#1e293b'},ticks:{color:'#94a3b8',callback:v=>v+'%'}},x:{grid:{display:false},ticks:{color:'#94a3b8'}}},plugins:{legend:{display:false}}}
   });
 
   // Competitor chart
-  const compData  = scores.competitor_counts || {};
-  const compNames = Object.keys(compData).length ? Object.keys(compData) : ["(none detected)"];
-  const compVals  = Object.keys(compData).length ? Object.values(compData) : [0];
-  if (compChart) compChart.destroy();
-  compChart = new Chart($("chart-comp"), {
-    type: "bar",
-    data: {
-      labels: compNames,
-      datasets: [{
-        label: "Mentions",
-        data: compVals,
-        backgroundColor: "#f97316",
-        borderRadius: 8, borderSkipped: false,
-      }]
-    },
-    options: {
-      indexAxis: "y",
-      responsive: true, maintainAspectRatio: false,
-      scales: {
-        x: { grid: { color: "#1e293b" }, ticks: { color: "#94a3b8", stepSize: 1 } },
-        y: { grid: { display: false },   ticks: { color: "#94a3b8" } }
-      },
-      plugins: { legend: { display: false } }
-    }
+  const compData=scores.competitor_counts||{};
+  const compNames=Object.keys(compData).length?Object.keys(compData):['(none detected)'];
+  const compVals=Object.keys(compData).length?Object.values(compData):[0];
+  if(compChart) compChart.destroy();
+  compChart=new Chart($('chart-comp'),{
+    type:'bar',
+    data:{labels:compNames,datasets:[{label:'Mentions',data:compVals,backgroundColor:'#f97316',borderRadius:8,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:'#1e293b'},ticks:{color:'#94a3b8',stepSize:1}},y:{grid:{display:false},ticks:{color:'#94a3b8'}}},plugins:{legend:{display:false}}}
   });
 
-  // Matrix
-  const head = $("r-matrix-head");
-  const body = $("r-matrix-body");
-  head.innerHTML = `<tr><th>Prompt</th>${platNames.map(p=>`<th>${p.split(" ")[0]}</th>`).join("")}</tr>`;
-  body.innerHTML = "";
-  prompts.forEach(prompt => {
-    const cells = platNames.map(pname => {
-      const r = results.find(x => x.prompt === prompt && x.platform === pname);
-      if (!r) return `<td class="cell-na">—</td>`;
-      return r.mentioned
-        ? `<td class="cell-yes" title="${escHtml(r.snippet||"")}">✅</td>`
-        : `<td class="cell-no">✗</td>`;
-    }).join("");
-    body.innerHTML += `<tr><td class="prompt-td">${escHtml(prompt)}</td>${cells}</tr>`;
-  });
-
-  // Recommendations
-  $("r-recs").innerHTML = buildRecs(scores, clientName).map(([t,b]) =>
-    `<div class="rec-card"><div class="rec-title">${t}</div><div class="rec-body">${b}</div></div>`
-  ).join("");
-
-  // Responses
-  const sentColors = {positive:"#10b981",neutral:"#3b82f6",mixed:"#f59e0b",negative:"#ef4444",not_mentioned:"#64748b"};
-  $("r-responses").innerHTML = results.filter(r=>!r.error).map(r => `
-    <details class="resp-item">
-      <summary>
-        <span class="resp-plat">${escHtml(r.platform)}</span>
-        <span class="resp-prompt">${escHtml(r.prompt)}</span>
-        <span class="resp-badge" style="background:${sentColors[r.sentiment]||"#64748b"}">${r.mentioned ? r.sentiment : "not mentioned"}</span>
-      </summary>
-      <div class="resp-body">${escHtml(r.response)}</div>
-    </details>`
-  ).join("");
-}
-
-// ── Helpers ───────────────────────────────────────────────────────
-function escHtml(s) {
-  return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-}
-
-function resetToForm() {
-  showView("view-form");
-}
-
-function buildRecs(scores, clientName) {
-  const recs = [];
-  const o    = scores.overall;
-  const comps = scores.competitor_counts || {};
-
-  if      (o < 20) recs.push(["🚨 Critical visibility gap",
-    "This brand is virtually absent from AI-generated answers. Prioritize structured, citable content — FAQs, comparison pages, schema markup — that AI models can easily parse and reference."]);
-  else if (o < 40) recs.push(["⚠️ Significant optimization needed",
-    "Rarely surfaced. Build topical authority: publish in-depth guides, earn backlinks from credible sources AI models cite frequently, and optimize all business profiles (Google Business, Clutch, G2)."]);
-  else if (o < 60) recs.push(["📈 Inconsistent presence — room to grow",
-    "Appearing in some AI answers but not reliably. Audit which prompts trigger mentions and reverse-engineer content gaps. Target the exact query types where the brand goes unmentioned."]);
-  else if (o < 80) recs.push(["✅ Good — optimize for quality of mention",
-    "Presence is solid. Shift focus from visibility to sentiment: ensure AI models are citing the brand in a positive, authoritative context. Review the raw response snippets for any neutral framings to address."]);
-  else recs.push(["🌟 Strong AI visibility",
-    "Well-represented. Maintain through consistent publishing and monitoring for new AI engines. Protect brand perception across review platforms that AI models use as training signals."]);
-
-  const pscores = scores.platforms || {};
-  const pnames  = Object.keys(pscores);
-  if (pnames.length > 1) {
-    const lowest  = pnames.reduce((a,b) => pscores[a] < pscores[b] ? a : b);
-    const highest = pnames.reduce((a,b) => pscores[a] > pscores[b] ? a : b);
-    if (pscores[highest] - pscores[lowest] > 25)
-      recs.push([`📊 Platform gap: weak on ${lowest}`,
-        `${pscores[lowest]}% on ${lowest} vs ${pscores[highest]}% on ${highest}. Each AI engine has different training biases — research what sources ${lowest} tends to cite and ensure the brand is represented there.`]);
+  // Who's ranking instead
+  const entities=extractRankingInstead(results,formData.client_name);
+  const rankEl=$('r-ranking-instead');
+  if(!entities.length){
+    rankEl.innerHTML='<div class="ranking-empty">✅ No dominant competitors detected in non-mention responses.</div>';
+  } else {
+    rankEl.innerHTML=`<div class="entity-list">${entities.map(([name,count])=>
+      `<div class="entity-chip"><span class="entity-name">${esc(name)}</span><span class="entity-count">${count}x</span></div>`
+    ).join('')}</div>`;
   }
 
-  const topComp = Object.entries(comps).sort((a,b)=>b[1]-a[1])[0];
-  if (topComp) recs.push([`🔍 Competitor spotlight: ${topComp[0]}`,
-    `${topComp[0]} was mentioned ${topComp[1]} time${topComp[1]!==1?"s":""} across your tested prompts. Audit their content strategy and identify gaps your client can fill.`]);
+  // Matrix
+  const enabledPlats=platNames;
+  $('r-matrix-head').innerHTML=`<tr><th>Prompt</th>${enabledPlats.map(p=>`<th>${esc(p.split(' ')[0])}</th>`).join('')}</tr>`;
+  $('r-matrix-body').innerHTML=prompts.map(prompt=>{
+    const cells=enabledPlats.map(pname=>{
+      const r=results.find(x=>x.prompt===prompt&&x.platform===pname);
+      if(!r) return`<td class="cell-na">—</td>`;
+      return r.mentioned?`<td class="cell-yes">✅</td>`:`<td class="cell-no">✗</td>`;
+    }).join('');
+    return`<tr><td class="prompt-td">${esc(prompt)}</td>${cells}</tr>`;
+  }).join('');
 
-  recs.push(["📅 Run audits on a cadence",
-    "AI model training updates continuously. Schedule monthly re-audits to track visibility trends, especially after new content is published or major press coverage is earned."]);
+  // Recommendations
+  $('r-recs').innerHTML=buildRecs(scores,formData.client_name).map(([t,b])=>
+    `<div class="rec-card"><div class="rec-title">${t}</div><div class="rec-body">${b}</div></div>`
+  ).join('');
 
+  // Raw responses
+  const sentColors={positive:'#10b981',neutral:'#3b82f6',mixed:'#f59e0b',negative:'#ef4444',not_mentioned:'#64748b'};
+  $('r-responses').innerHTML=results.filter(r=>!r.error).map(r=>`
+    <details class="resp-item">
+      <summary>
+        <span class="resp-plat">${esc(r.platform)}</span>
+        <span class="resp-prompt">${esc(r.prompt)}</span>
+        <div class="resp-meta">
+          <span class="resp-badge" style="background:${sentColors[r.sentiment]||'#64748b'}">${r.mentioned?r.sentiment:'not mentioned'}</span>
+          ${r.snippet?`<span class="resp-snippet">${esc(r.snippet)}</span>`:''}
+        </div>
+      </summary>
+      <div class="resp-body">${esc(r.response)}</div>
+    </details>`
+  ).join('');
+}
+
+// ── Recommendations ───────────────────────────────────────────────
+function buildRecs(scores,clientName){
+  const recs=[];const o=scores.overall;const comps=scores.competitor_counts||{};
+  if(o<20) recs.push(['🚨 Critical visibility gap','This brand is virtually absent from AI-generated answers. Prioritize structured, citable content — FAQs, comparison pages, schema markup — that AI models can easily parse and reference. National brands dominating local queries is a common pattern and a solvable content problem.']);
+  else if(o<40) recs.push(['⚠️ Significant optimization needed','Rarely surfaced. Build topical authority with in-depth local guides, earn backlinks from credible regional sources, and optimize all business profiles (Google Business, Yelp, industry directories) that AI models pull from.']);
+  else if(o<60) recs.push(['📈 Inconsistent presence — room to grow','Appearing in some AI answers but not reliably. Audit which prompts trigger mentions and reverse-engineer the content gaps.']);
+  else if(o<80) recs.push(['✅ Good — optimize for quality of mention','Presence is solid. Shift focus to sentiment: ensure AI models cite the brand in a positive, authoritative context.']);
+  else recs.push(['🌟 Strong AI visibility','Well-represented. Maintain through consistent publishing and monitor for new AI engines entering the market.']);
+
+  const pscores=scores.platforms||{};const pnames=Object.keys(pscores);
+  if(pnames.length>1){
+    const lowest=pnames.reduce((a,b)=>pscores[a]<pscores[b]?a:b);
+    const highest=pnames.reduce((a,b)=>pscores[a]>pscores[b]?a:b);
+    if(pscores[highest]-pscores[lowest]>25)
+      recs.push([`📊 Platform gap: weak on ${lowest}`,`${pscores[lowest]}% on ${lowest} vs ${pscores[highest]}% on ${highest}. Each AI engine has different training biases — research what sources ${lowest} tends to cite.`]);
+  }
+  const topComp=Object.entries(comps).sort((a,b)=>b[1]-a[1])[0];
+  if(topComp) recs.push([`🔍 Competitor spotlight: ${topComp[0]}`,`${topComp[0]} appeared ${topComp[1]} time${topComp[1]!==1?'s':''} across your tested prompts. Audit their content strategy and identify gaps your client can fill.`]);
+  recs.push(['📅 Run audits on a cadence','AI model training updates continuously. Schedule monthly re-audits to track visibility trends, especially after new content or major press coverage.']);
   return recs;
 }
 
-// ── PWA: Service Worker ───────────────────────────────────────────
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/sw.js").catch(() => {});
-}
+function resetToForm(){showView('view-form')}
+
+// Init
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+renderHistory();
 </script>
 </body>
 </html>
